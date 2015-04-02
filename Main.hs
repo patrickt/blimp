@@ -38,8 +38,9 @@ rootResource = defaultResource
                   p <- pool <$> getState
                   withResource p $ \int1 ->
                     withResource p $ \int2 -> do
-                      let page = frontPage int1 int2
-                      return [ ("text/html", buildHtmlResponse page)]
+                      now <- requestTime
+                      let page = frontPage int1 int2 now
+                      return [ ("text/html", return (buildHtmlResponse page))]
                }
 
 generateInt :: IORef Int -> IO Int

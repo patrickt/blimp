@@ -22,7 +22,9 @@ executable blimp
   build-depends:       base >=4.7 && <4.8
                      , airship
                      , blaze-html == 0.8.*
+                     , old-locale
                      , resource-pool == 0.2.3.*
+                     , time == 1.4.*
                      , wai
                      , warp
 
