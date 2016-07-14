@@ -17,14 +17,17 @@ cabal-version:       >=1.10
 
 executable blimp
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       Pages
   -- other-extensions:
-  build-depends:       base >=4.7 && <4.8
+  ghc-options: -threaded -Wall -Werror -fwarn-tabs -funbox-strict-fields
+               -rtsopts "-with-rtsopts=-N -T" -fprof-auto
+  build-depends:       base
                      , airship
-                     , blaze-html == 0.8.*
+                     , blaze-html
                      , old-locale
-                     , resource-pool == 0.2.3.*
-                     , time == 1.4.*
+                     , resource-pool
+                     , time
+                     , mtl
                      , wai
                      , warp
 

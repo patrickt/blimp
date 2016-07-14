@@ -7,19 +7,17 @@ import           Airship.Helpers
 import           Airship.Resource
 import           Airship.Route
 import           Airship.Types
-
 import           Control.Applicative
-import           Data.Pool
+import           Control.Monad.Reader
 import           Data.IORef
-import           Text.Blaze.Html (Html)
+import           Data.Pool
+import           Text.Blaze.Html               (Html)
 import           Text.Blaze.Html.Renderer.Utf8
 
-import           Network.Wai (strictRequestBody)
-import           Network.Wai.Handler.Warp ( runSettings
-                                          , defaultSettings
-                                          , setPort
-                                          , setHost
-                                          )
+import           Network.Wai                   (strictRequestBody)
+import qualified Network.Wai                   as WAI
+import           Network.Wai.Handler.Warp      (defaultSettings, runSettings,
+                                                setHost, setPort)
 
 
 import           Pages
@@ -28,20 +26,25 @@ data AppState = AppState
             { pool :: Pool Int
             } deriving (Show)
 
-buildHtmlResponse :: Html -> ResponseBody m
+type Blimp = ReaderT AppState IO
+
+buildHtmlResponse :: Html -> ResponseBody
 buildHtmlResponse = ResponseBuilder . renderHtmlBuilder
 
-rootResource :: Resource AppState IO
+rootResource :: Resource Blimp
 rootResource = defaultResource
                { knownContentType = contentTypeMatches ["text/*"]
                , contentTypesProvided = do
-                  p <- pool <$> getState
+                  p <- lift $ asks pool
                   withResource p $ \int1 ->
                     withResource p $ \int2 -> do
                       now <- requestTime
                       let page = frontPage int1 int2 now
                       return [ ("text/html", return (buildHtmlResponse page))]
                }
+
+mkAppState :: AppState -> Request -> Blimp WAI.Response -> IO WAI.Response
+mkAppState st _r resp = runReaderT resp st
 
 generateInt :: IORef Int -> IO Int
 generateInt r = do
@@ -52,7 +55,7 @@ generateInt r = do
 destroyInt :: IORef Int -> Int -> IO ()
 destroyInt r _ = modifyIORef r succ
 
-routes :: RoutingSpec AppState IO ()
+routes :: RoutingSpec Blimp ()
 routes = do
   root #> rootResource
 
@@ -65,4 +68,4 @@ main = do
   pool <- createPool (generateInt counter) (destroyInt counter) 10 60 10
   let state = AppState pool
   putStrLn "listening on port 3000"
-  runSettings settings (resourceToWai routes defaultResource state)
+  runSettings settings (resourceToWaiT defaultAirshipConfig (mkAppState state) routes mempty)

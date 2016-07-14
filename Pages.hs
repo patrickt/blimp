@@ -3,11 +3,10 @@
 module Pages where
 
 import           Data.Monoid
-import           Prelude hiding (head)
-import           Text.Blaze.Html5
-import           Data.Time.Format
 import           Data.Time.Clock
-import           System.Locale
+import           Data.Time.Format
+import           Prelude          hiding (head)
+import           Text.Blaze.Html5
 
 frontPage :: Int -> Int -> UTCTime -> Html
 frontPage a b t = do

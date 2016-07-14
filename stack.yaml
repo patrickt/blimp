@@ -1,0 +1,2 @@
+require-stack-version: ">= 1.0.2"
+resolver: nightly-2016-07-14
